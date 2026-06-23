@@ -1,16 +1,81 @@
-# React + Vite
+# FinCoach
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**FinCoach** est une application de gestion financière intelligente, développée avec une architecture full-stack moderne.
 
-Currently, two official plugins are available:
+## 🚀 À propos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Frontend: **Vite + React 19 + Tailwind CSS**
+- PWA: **vite-plugin-pwa** pour installation mobile et service worker
+- Graphiques: **Recharts** pour dashboard financier
+- Backend: **FastAPI + Uvicorn**
+- Authentification: **JWT** et intégration **Supabase**
+- Base de données: **PostgreSQL / Supabase**
 
-## React Compiler
+## 🧩 Fonctionnalités
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Tableau de bord financier réactif
+- Visualisation des revenus et dépenses
+- Gestion des transactions
+- Suivi des budgets par catégorie
+- Authentification sécurisée
+- Application installable en tant que PWA
 
-## Expanding the ESLint configuration
+## 📁 Structure du projet
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```
+fincoach-app/
+├── public/                 # Assets, manifest, icônes PWA
+├── src/                    # Frontend React
+│   ├── components/         # Composants UI
+│   ├── services/           # Services API et Supabase
+│   ├── App.jsx
+│   └── main.jsx
+├── backend/                # Backend FastAPI
+│   ├── app/
+│   ├── main.py
+│   └── requirements.txt
+├── .env.example            # Variables frontend
+├── docker-compose.yml      # Services PostgreSQL / Redis
+├── package.json            # Dépendances frontend
+├── vite.config.js          # Config Vite + PWA
+└── tailwind.config.js      # Config Tailwind
+```
+
+## ⚡ Installation rapide
+
+### Frontend
+
+```bash
+npm install
+npm run dev
+```
+
+### Backend
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
+```
+
+## 🌐 Utilisation
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8000/docs`
+
+## 📚 Documentation utile
+
+- [QUICKSTART.md](./QUICKSTART.md)
+- [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)
+- [PUSH_TO_GITHUB.md](./PUSH_TO_GITHUB.md)
+- [ROADMAP.md](./ROADMAP.md)
+
+## ✍️ Auteur
+
+**Enamafranck**
+
+## 📝 Licence
+
+MIT

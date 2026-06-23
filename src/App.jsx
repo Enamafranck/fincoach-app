@@ -1,121 +1,115 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useState, useEffect } from 'react'
+import { authService, supabase } from './services/supabase'
+import AuthForm from './components/AuthForm'
+import Onboarding from './components/Onboarding'
+import Dashboard from './components/Dashboard'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [user, setUser] = useState(null)
+  const [profilExiste, setProfilExiste] = useState(null) // null = pas encore vérifié
+  const [chargement, setChargement] = useState(true)
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState(null)
+
+  useEffect(() => {
+    let initialisationTerminee = false
+
+    async function verifierSession() {
+      const { user } = await authService.getCurrentUser()
+      setUser(user)
+      if (user) {
+        await verifierProfil(user.id)
+      }
+      setChargement(false)
+      initialisationTerminee = true  // ✅ On signale que le chargement initial est fini
+    }
+
+    verifierSession()
+
+    const { data: listener } = authService.onAuthStateChange(async (_event, session) => {
+      // ⛔ On ignore les événements qui arrivent pendant le chargement initial
+      // pour éviter que Supabase double-appelle verifierProfil au montage
+      if (!initialisationTerminee) return
+
+      const newUser = session?.user ?? null
+      setUser(newUser)
+      if (newUser) {
+        await verifierProfil(newUser.id)
+      } else {
+        setProfilExiste(null)
+      }
+    })
+
+    return () => {
+      listener?.subscription?.unsubscribe()
+    }
+  }, [])
+
+  // Vérifie si une ligne existe déjà dans la table "utilisateurs" pour cet id
+  async function verifierProfil(userId) {
+    console.log('🔍 Vérification du profil pour userId:', userId)
+    const { data, error } = await supabase
+      .from('utilisateurs')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle()
+
+    console.log('🔍 Résultat verifierProfil — data:', data, 'error:', error)
+    setProfilExiste(!error && !!data)
+  }
+
+  // Gère la soumission du formulaire AuthForm (connexion OU inscription)
+  async function handleAuthSubmit({ email, password, isSignUp }) {
+    setAuthLoading(true)
+    setAuthError(null)
+
+    const { data, error } = isSignUp
+      ? await authService.signUp(email, password)
+      : await authService.signIn(email, password)
+
+    if (error) {
+      setAuthError(error.message)
+    } else if (data?.user) {
+      setUser(data.user)
+      await verifierProfil(data.user.id)
+    }
+
+    setAuthLoading(false)
+  }
+
+  async function handleLogout() {
+    await authService.signOut()
+    setUser(null)
+  }
+
+  if (chargement) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-500">Chargement...</p>
+      </div>
+    )
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="min-h-screen bg-gray-50">
+      {!user ? (
+        <>
+          <AuthForm onSubmit={handleAuthSubmit} loading={authLoading} />
+          {authError && (
+            <p className="text-center text-red-600 text-sm mt-[-1rem]">{authError}</p>
+          )}
+        </>
+      ) : profilExiste === false ? (
+        <Onboarding user={user} onComplete={() => setProfilExiste(true)} />
+      ) : profilExiste === true ? (
+        <Dashboard user={user} onLogout={handleLogout} />
+      ) : (
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-gray-500">Vérification du profil...</p>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      )}
+    </div>
   )
 }
 
